@@ -1,16 +1,33 @@
-# This is a sample Python script.
+import os
+import re
+import log_to_csv_module1 as m1
 
-# Press ⌃R to execute it or replace it with your code.
-# Press Double ⇧ to search everywhere for classes, files, tool windows, actions, and settings.
-
-
-def print_hi(name):
-    # Use a breakpoint in the code line below to debug your script.
-    print(f'Hi, {name}')  # Press ⌘F8 to toggle the breakpoint.
+listOfFiles = []
+path = '/Users/justinclay/Downloads/AKB Log files'
+LOG_FILE_PATH = '/Users/justinclay/Downloads/AKB Log files/AKB M1/2021-10-11_History.log'
 
 
-# Press the green button in the gutter to run the script.
+def scandirectory(path):
+    global listOfFiles
+    for (dirpath, dirnames, filenames) in os.walk(path):
+        listOfFiles += [os.path.join(dirpath, file) for file in filenames]
+
+
 if __name__ == '__main__':
-    print_hi('PyCharm')
+    scandirectory(path)
 
-# See PyCharm help at https://www.jetbrains.com/help/pycharm/
+    for i in listOfFiles:
+        if i.split("/")[-1] == '.DS_Store':
+            listOfFiles.remove(i)
+            pass
+
+    _, _, _, _, _, _, new_all_counts = m1.main(
+        LOG_FILE_PATH)
+
+# for i in listOfFiles:
+#     if re.findall('AKB M1', i):
+#         try:
+#             temp_data, errors_parsed_list, ohms, total_time_mins, log_start_time, log_end_time, new_all_counts = \
+#                 m1.parse_log(lines)
+#         except ValueError:
+#             pass
