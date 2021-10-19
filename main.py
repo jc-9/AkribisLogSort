@@ -1,10 +1,12 @@
 import os
 import re
 import log_to_csv_module1 as m1
+import pandas as pd
 
 listOfFiles = []
 path = '/Users/justinclay/Downloads/AKB Log files'
-LOG_FILE_PATH = '/Users/justinclay/Downloads/AKB Log files/AKB M1/2021-10-11_History.log'
+LOG_FILE_PATH = '/Users/justinclay/Downloads/AKB Log files/AKB M1/2021-10-12_History.log'
+finallist = []
 
 
 def scandirectory(path):
@@ -21,13 +23,10 @@ if __name__ == '__main__':
             listOfFiles.remove(i)
             pass
 
-    _, _, _, _, _, _, new_all_counts = m1.main(
-        LOG_FILE_PATH)
-
-# for i in listOfFiles:
-#     if re.findall('AKB M1', i):
-#         try:
-#             temp_data, errors_parsed_list, ohms, total_time_mins, log_start_time, log_end_time, new_all_counts = \
-#                 m1.parse_log(lines)
-#         except ValueError:
-#             pass
+for i in listOfFiles:
+    if re.findall('AKB M1', i):
+        try:
+            _, _, _, _, _, _, new_all_counts = m1.main(i)
+            finallist.append(new_all_counts)
+        except ValueError:
+            pass

@@ -21,7 +21,9 @@ def main(path: str):
 
     LOG_FILE_PATH = path
     if len(LOG_FILE_PATH) < 1:
+
         raise Exception("No Log Path Found")
+        pass
 
     temp_data, errors_parsed_list, ohms, total_time_mins, log_start_time, log_end_time, new_all_counts = parse_log(
         lines)
@@ -514,4 +516,8 @@ def parse_log(read_lines):
 
 
 if __name__ == '__main__':
-    main()
+    try:
+        main()
+    except TypeError:
+        main(LOG_FILE_PATH)
+        pass
