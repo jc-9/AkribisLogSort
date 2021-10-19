@@ -30,3 +30,15 @@ for i in listOfFiles:
             finallist.append(new_all_counts)
         except ValueError:
             pass
+df_m1 = pd.DataFrame(finallist, dtype=int)
+# df_finalExcel = pd.read_excel('/Users/justinclay/Downloads/Steam Akribis Data Lot 10-11 to 10-14.xlsx',
+#                               sheet_name="Summary M1",
+#                               usecols=df_m1.columns, skiprows=2)
+df_finalExcel = pd.read_excel('/Users/justinclay/Downloads/Steam Akribis Data Lot 10-11 to 10-14.xlsx',
+                              sheet_name="Summary M1",
+                              skiprows=2,
+                              nrows=56
+                              )
+df_final = df_finalExcel.append(df_m1)
+m1_colList = df_m1.columns
+df_finalExcel[m1_colList].append(df_m1)
