@@ -23,6 +23,7 @@ def main(path: str):
     try:
         parsed_temp, errors_parsed, resistance_values, time_diff_mins, log_start_time, log_end_time, new_counts = parse_log(
             lines)
+        gettime(parsed_temp, log_start_time, log_end_time, new_counts)
         return parsed_temp, errors_parsed, resistance_values, time_diff_mins, log_start_time, log_end_time, new_counts
     except TypeError:
         print('Skip File:', f'{path}')
@@ -71,6 +72,79 @@ def division_handler(numerator, denominator):
         return numerator / denominator
     except ZeroDivisionError:
         return 0
+
+
+def gettime(temp, log_start_time, log_end_time, new_counts):
+    previous_state = STOPPING_STATUS
+    session_flag = False
+    session_up_time = []
+    Up_time_session = datetime.timedelta(seconds=0)
+    longest_up_time = datetime.timedelta(seconds=0)
+    Up_time = datetime.timedelta(seconds=0)
+    total_down_time = datetime.timedelta(seconds=0)
+    error_log_list = []
+    errors = []
+    time_00 = 0
+    time_02_03 = 0
+    time_above_03 = 0
+    assist_count = 0
+    k = ""
+    for i in temp:
+        if i['log_status'] == RUNNING_STATUS:
+            if previous_state == RUNNING_STATUS:
+                Up_time = Up_time + (
+                        get_timedelta(i['date_time_obj']) - get_timedelta(previous_running_time))
+                Up_time_session = Up_time_session + (
+                        get_timedelta(i['date_time_obj']) - get_timedelta(previous_running_time))
+            elif previous_state == STOPPING_STATUS and session_flag:
+                down_time = (get_timedelta(i['date_time_obj']) - get_timedelta(k)) - Up_time_session
+                total_down_time += down_time
+                session_up_time.append({"up": "", "down": down_time,
+                                        "error_log_list": error_log_list, "start_time": k + Up_time_session,
+                                        "end_time": i['date_time_obj'], "errors": ",".join(errors),
+                                        "error_logs": error_log_list})
+                assist_count += 1
+                errors = []
+                error_log_list = []
+                Up_time_session = datetime.timedelta(seconds=0)
+                k = i['date_time_obj']
+            else:
+                session_flag = True
+
+            previous_state = RUNNING_STATUS
+            previous_running_time = i['date_time_obj']
+            if not k:
+                k = i['date_time_obj']
+        elif i['log_status'] == STOPPING_STATUS and previous_state == RUNNING_STATUS and session_flag:
+            previous_state = STOPPING_STATUS
+            if i.get('Error_Log'):
+                for n in i['Error_Log']:
+                    error_log_list.append(n)
+            if i.get('errors'):
+                errors.append(i.get('errors'))
+            Up_time = Up_time + (get_timedelta(i['date_time_obj']) - get_timedelta(previous_running_time))
+            Up_time_session = Up_time_session + (get_timedelta(i['date_time_obj']) - get_timedelta(
+                previous_running_time))
+            session_up_time.append({"up": Up_time_session, "down": "", "error_log_list": error_log_list,
+                                    "start_time": k, "end_time": i['date_time_obj'], "errors": "",
+                                    "error_logs": error_log_list})
+            if Up_time_session > longest_up_time:
+                longest_up_time = Up_time_session
+            time_00, time_02_03, time_above_03 = categorize_time(Up_time_session, time_00, time_02_03,
+                                                                 time_above_03)
+        elif i['log_status'] == STOPPING_STATUS and previous_state == STOPPING_STATUS and session_flag:
+            if i.get('Error_Log'):
+                for n in i['Error_Log']:
+                    error_log_list.append(n)
+            if i.get('errors'):
+                errors.append(i.get('errors'))
+
+    new_counts["Start"] = log_start_time
+    new_counts["End"] = log_end_time
+    new_counts["Assist"] = assist_count
+    new_counts["DT"] = str(datetime.timedelta(seconds=total_down_time.total_seconds()))
+    new_counts["Run Time"] = str(datetime.timedelta(seconds=Up_time.total_seconds()))
+    resistance_csv_data = [["Timestamp", "Resistance(ohm)"]]
 
 
 def parse_log(read_lines):
@@ -206,11 +280,8 @@ def parse_log(read_lines):
          ("Pass", invert_vision_ok),  # output at final inspection 2
          ("Fail", fg_vision1_fail + fg_vision2_fail + invert_vision_fail + (
                  fg_vision2_ok - invert_vision_fail - invert_vision_ok)),
-         # total failure in fg_vision1 and fg_vision2 and invert_vision and outfeed errors
          ("DT", 0), ("Run Time", 0), ("Assist", 0),
          ("Stn5 Fail", infeed_pick_ok - infeed_place_ok),
-         #                              ("Stn6B_1 Fail", wick1_pick_error),
-         #                              ("Stn6B_2 Fail", wick2_pick_error),
          ("Stn6D Fail", wick_transfer_vision_fail),
          ("Stn6 Fail", wick_insert_error),
          ("Stn7_1 Fail", fg_vision1_fail),
@@ -219,8 +290,6 @@ def parse_log(read_lines):
          ("Stn9 Fail", invert_vision_fail),
          ("Stn10 Fail", outfeed_pick_ok - outfeed_place_ok),
          ("Stn5 Pass", infeed_place_ok),
-         #                              ("Stn6B_1 Pass", wick1_pick_ok),
-         #                              ("Stn6B_2 Pass", wick2_pick_ok),
          ("Stn6 Pass", wick_insert_ok),
          ("Stn6D Pass", wick_transfer_vision_ok),
          ("Stn7_1 Pass", fg_vision1_ok),
@@ -239,3 +308,7 @@ def parse_log(read_lines):
          ])
 
     return parsed_temp, errors_parsed, resistance_values, time_diff_mins, log_start_time, log_end_time, new_counts
+
+
+# if __name__ == '__main__':
+#     main('/Users/justinclay/Downloads/AKB Log files/AKB M2/2021-10-11_History.log')

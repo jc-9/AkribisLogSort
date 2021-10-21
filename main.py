@@ -55,7 +55,7 @@ for i in listOfFiles:
             M1_new_all_counts.update({'Date': i.split("/")[-1].split("_")[0]})
             M1_new_all_counts.move_to_end('Date', last=False)
             print('All Values Extracted:', i)
-            # m1_finallist.append(M1_new_all_counts)
+            m1_finallist.append(M1_new_all_counts)
             m1_finallist.append(list(M1_new_all_counts.values()))
             sheet_m1.append(list(M1_new_all_counts.values()))
         except Exception as e:
@@ -70,7 +70,7 @@ for i in listOfFiles:
             M2_new_all_counts.update({'Date': i.split("/")[-1].split("_")[0]})
             M2_new_all_counts.move_to_end('Date', last=False)
             print('All Values Extracted:', i)
-            # m2_finallist.append(M2_new_all_counts)
+            m2_finallist.append(M2_new_all_counts)
             m2_finallist.append(list(M2_new_all_counts.values()))
             sheet_m2.append(list(M2_new_all_counts.values()))
         except Exception as e:
@@ -84,7 +84,7 @@ for i in listOfFiles:
             M3_new_all_counts.update({'Date': i.split("/")[-1].split("_")[0]})
             M3_new_all_counts.move_to_end('Date', last=False)
             print('All Values Extracted:', i)
-            # m3_finallist.append(M3_new_all_counts)
+            m3_finallist.append(M3_new_all_counts)
             m3_finallist.append(list(M3_new_all_counts.values()))
             sheet_m3.append(list(M3_new_all_counts.values()))
         except Exception as e:
@@ -99,6 +99,7 @@ for i in listOfFiles:
             M4_new_all_counts.update({'Date': i})
             M4_new_all_counts.move_to_end('Date', last=False)
             print('All Values Extracted:', i.split("/")[-1].split("_")[0])
+            m4_finallist.append(M4_new_all_counts)
             m4_finallist.append(list(M4_new_all_counts.values()))
             sheet_m4.append(list(M4_new_all_counts.values()))
         except Exception as e:
