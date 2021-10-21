@@ -12,18 +12,31 @@ q = re.compile(r'\w+\d=FAIL')
 # END_TIME = "2019-04-23 16:22:07.5131"
 START_TIME = ""
 END_TIME = ""
+LOG_FILE_PATH = '/Users/justinclay/Downloads/AKB Log files/AKB M1/2021-10-11_History.log'
 
-if len(sys.argv) > 1:
-    LOG_FILE_PATH = sys.argv[1]
-    if len(sys.argv) > 2:
-        START_TIME = sys.argv[2]
-        END_TIME = sys.argv[3]
-else:
-    raise Exception("Log file path is mandatory to process.")
+
+def main(path: str):
+    global temp_data, errors_parsed_list,ohms, total_time_mins, log_start_time, log_end_time, new_all_counts
+    global LOG_FILE_PATH
+
+    LOG_FILE_PATH = path
+    if len(LOG_FILE_PATH) < 1:
+        raise Exception("No Log Path Found")
+        pass
+    temp_data, errors_parsed_list,ohms, total_time_mins, log_start_time, log_end_time, new_all_counts = parse_log(lines)
+
+    return temp_data, errors_parsed_list,ohms, total_time_mins, log_start_time, log_end_time, new_all_counts
+
+# if len(sys.argv) > 1:
+#     LOG_FILE_PATH = sys.argv[1]
+#     if len(sys.argv) > 2:
+#         START_TIME = sys.argv[2]
+#         END_TIME = sys.argv[3]
+# else:
+#     raise Exception("Log file path is mandatory to process.")
 
 RUNNING_STATUS = "Running"
 STOPPING_STATUS = "Stopped"
-
 
 with open(LOG_FILE_PATH) as f:
     lines = f.readlines()
@@ -44,7 +57,7 @@ def get_date_time_obj(datetime_str):
 
 
 def categorize_time(up_time, time_00, time_02_03, time_above_03):
-    total_minutes = up_time.total_seconds()/60
+    total_minutes = up_time.total_seconds() / 60
     if total_minutes < 1:
         time_00 += 1
     elif 1 <= total_minutes <= 3:
@@ -52,6 +65,7 @@ def categorize_time(up_time, time_00, time_02_03, time_above_03):
     elif total_minutes > 3:
         time_above_03 += 1
     return time_00, time_02_03, time_above_03
+
 
 # Original code
 # def write_csv_data(temp, output_log_csv_name, output_yield_value, uph,
@@ -61,17 +75,17 @@ def categorize_time(up_time, time_00, time_02_03, time_above_03):
 def write_csv_data(temp, output_log_csv_name,
                    errors_parsed,
                    resistance_values, time_diff_mins, log_start_time, log_end_time, new_counts):
-# stn_5 = Infeed
-# stn_6b_1 = Wick Pick 1
-# stn_6b_2 = Wick Pick 2
-# stn_6c = Wick Flip
-# stn_6d = Wick Pick Vision
-# stn_6 = Wick Compress/Place
-# stn_7_1 = FG Vision 1
-# stn_7_2 = FG Vision 2
-# stn_8 = Wick Flip
-# stn_9 = Wick Flip Vision
-# stn_10 = Outfeed
+    # stn_5 = Infeed
+    # stn_6b_1 = Wick Pick 1
+    # stn_6b_2 = Wick Pick 2
+    # stn_6c = Wick Flip
+    # stn_6d = Wick Pick Vision
+    # stn_6 = Wick Compress/Place
+    # stn_7_1 = FG Vision 1
+    # stn_7_2 = FG Vision 2
+    # stn_8 = Wick Flip
+    # stn_9 = Wick Flip Vision
+    # stn_10 = Outfeed
 
     previous_state = STOPPING_STATUS
     session_flag = False
@@ -143,7 +157,7 @@ def write_csv_data(temp, output_log_csv_name,
     new_counts["DT"] = total_down_time
     new_counts["Run Time"] = Up_time
 
-    with open(output_log_csv_name.split(".")[0]+"_new_counts.csv", 'w') as out_file:
+    with open(output_log_csv_name.split(".")[0] + "_new_counts.csv", 'w') as out_file:
         writer = csv.writer(out_file, dialect='excel')
         header = list()
         header_value = list()
@@ -158,7 +172,7 @@ def write_csv_data(temp, output_log_csv_name,
     error_csv_data = [["Time Stamp", "Error"]]
     for error in range(len(errors_parsed)):
         error_csv_data.append([str(errors_parsed[error]["date_time_obj"]), str(errors_parsed[error]["error"])])
-    with open(output_log_csv_name.split(".")[0]+"_errors.csv", 'w') as error_csv_file:
+    with open(output_log_csv_name.split(".")[0] + "_errors.csv", 'w') as error_csv_file:
         writer = csv.writer(error_csv_file)
         writer.writerows(error_csv_data)
 
@@ -169,20 +183,20 @@ def write_csv_data(temp, output_log_csv_name,
              session_up_time[i]["errors"], str(session_up_time[i]["down"]), str(session_up_time[i]["up"])])
     csvData.append(["      "])
     csvData.append(["      "])
-#    csvData.append(["Yield", output_yield_value])
+    #    csvData.append(["Yield", output_yield_value])
     csvData.append(["Total_Up_time", str(Up_time)])
-#    csvData.append(["Units Per Hour", str(uph)])
+    #    csvData.append(["Units Per Hour", str(uph)])
     csvData.append(["      "])
-#    csvData.append(["Defects by station: WH Station 1", str(stn_1)])
-#    csvData.append(["Defects by station: EC Station 4", str(stn_4)])
-#    csvData.append(["Defects by station: WC Station 6", str(stn_6)])
-#    csvData.append(["Defects by station: Overall Station 9", str(stn_9)])
-#    csvData.append(["Defects by station: RM Station 10", str(stn_10)])
-#    csvData.append(["Defects by station: AH Infeed M1-1", str(stn_1)])
-#    csvData.append(["Defects by station: Heater Insert M1-3", str(stn_3)])
-#    csvData.append(["Defects by station: Inspection M1-4-1", str(stn_4_1)])
-#    csvData.append(["Defects by station: Inspection M1-4-2", str(stn_4_2)])
-#    csvData.append(["Defects by station: Transfer M1-5", str(stn_5)])
+    #    csvData.append(["Defects by station: WH Station 1", str(stn_1)])
+    #    csvData.append(["Defects by station: EC Station 4", str(stn_4)])
+    #    csvData.append(["Defects by station: WC Station 6", str(stn_6)])
+    #    csvData.append(["Defects by station: Overall Station 9", str(stn_9)])
+    #    csvData.append(["Defects by station: RM Station 10", str(stn_10)])
+    #    csvData.append(["Defects by station: AH Infeed M1-1", str(stn_1)])
+    #    csvData.append(["Defects by station: Heater Insert M1-3", str(stn_3)])
+    #    csvData.append(["Defects by station: Inspection M1-4-1", str(stn_4_1)])
+    #    csvData.append(["Defects by station: Inspection M1-4-2", str(stn_4_2)])
+    #    csvData.append(["Defects by station: Transfer M1-5", str(stn_5)])
     csvData.append(["      "])
     if time_00 and time_02_03 and time_above_03:
         total_up_time_cycles = time_00 + time_02_03 + time_above_03
@@ -195,29 +209,29 @@ def write_csv_data(temp, output_log_csv_name,
     csvData.append(["      "])
     csvData.append(["      "])
     csvData.append(["", "Good", "Bad", "Material loss percentage"])
-#    csvData.append(["WH", str(display_material_loss.get("wh_good")), str(display_material_loss.get("wh_bad")),
-#                    stn_1*100])
-#    csvData.append(["EC1", str(display_material_loss.get("ec1_good")), str(display_material_loss.get("ec1_bad")),
-#                    stn_2*100])
-#    csvData.append(["EC2", str(display_material_loss.get("ec2_good")), str(display_material_loss.get("ec2_bad")),
-#                    stn_3*100])
-#    csvData.append(["WC1", str(display_material_loss.get("wc1_good")), str(display_material_loss.get("wc1_bad")),
-#                    stn_5_1*100])
-#    csvData.append(["WC2", str(display_material_loss.get("wc2_good")), str(display_material_loss.get("wc2_bad")),
-#                    stn_5_2*100])
-#    csvData.append(["AH", str(display_material_loss.get("ah_good")), str(display_material_loss.get("ah_bad")),
-#                    stn_1*100])
-#    csvData.append(["Heater1", str(display_material_loss.get("heater1_good")), str(display_material_loss.get("heater1_bad")),
-#                    stn_3e_1*100])
-#    csvData.append(["Heater2", str(display_material_loss.get("heater2_good")), str(display_material_loss.get("heater2_bad")),
-#                    stn_3e_2*100])
+    #    csvData.append(["WH", str(display_material_loss.get("wh_good")), str(display_material_loss.get("wh_bad")),
+    #                    stn_1*100])
+    #    csvData.append(["EC1", str(display_material_loss.get("ec1_good")), str(display_material_loss.get("ec1_bad")),
+    #                    stn_2*100])
+    #    csvData.append(["EC2", str(display_material_loss.get("ec2_good")), str(display_material_loss.get("ec2_bad")),
+    #                    stn_3*100])
+    #    csvData.append(["WC1", str(display_material_loss.get("wc1_good")), str(display_material_loss.get("wc1_bad")),
+    #                    stn_5_1*100])
+    #    csvData.append(["WC2", str(display_material_loss.get("wc2_good")), str(display_material_loss.get("wc2_bad")),
+    #                    stn_5_2*100])
+    #    csvData.append(["AH", str(display_material_loss.get("ah_good")), str(display_material_loss.get("ah_bad")),
+    #                    stn_1*100])
+    #    csvData.append(["Heater1", str(display_material_loss.get("heater1_good")), str(display_material_loss.get("heater1_bad")),
+    #                    stn_3e_1*100])
+    #    csvData.append(["Heater2", str(display_material_loss.get("heater2_good")), str(display_material_loss.get("heater2_bad")),
+    #                    stn_3e_2*100])
     total_down_time_mins = 0
-#    stn_1_4_6 = display_counts.get("OutfeedReject=1[Ok]") + display_counts.get("EContact2=FAIL") + \
-#                display_counts.get("WickCoilPlaced=FAIL")
-#    time_log_op = display_counts.get("PickAtomizerFromTurret=1[Ok]") - stn_1_4_6
-#    tossing_stn_1_4_6 = display_counts.get("PunchEContact2=1[E1002]") + stn_1_4_6
+    #    stn_1_4_6 = display_counts.get("OutfeedReject=1[Ok]") + display_counts.get("EContact2=FAIL") + \
+    #                display_counts.get("WickCoilPlaced=FAIL")
+    #    time_log_op = display_counts.get("PickAtomizerFromTurret=1[Ok]") - stn_1_4_6
+    #    tossing_stn_1_4_6 = display_counts.get("PunchEContact2=1[E1002]") + stn_1_4_6
     total_up_time_mins = round(float(Up_time.total_seconds()) / 60, 2)
-#    actual_ppm = division_handler((time_log_op + tossing_stn_1_4_6), total_up_time_mins)
+    #    actual_ppm = division_handler((time_log_op + tossing_stn_1_4_6), total_up_time_mins)
     try:
 
         down_time_list = [x["down"] for x in session_up_time if x["down"]]
@@ -231,12 +245,14 @@ def write_csv_data(temp, output_log_csv_name,
         writer = csv.writer(csvFile)
         writer.writerows(csvData)
     count_csv_data = [["Name", "Count"]]
-#    for key, value in display_counts.items():
-#        count_csv_data.append([str(key), str(value)])
-    with open(output_log_csv_name.split(".")[0]+"_counts.csv", 'w') as count_csv_file:
+    #    for key, value in display_counts.items():
+    #        count_csv_data.append([str(key), str(value)])
+    with open(output_log_csv_name.split(".")[0] + "_counts.csv", 'w') as count_csv_file:
         count_writer = csv.writer(count_csv_file)
         count_writer.writerows(count_csv_data)
     resistance_csv_data = [["Timestamp", "Resistance(ohm)"]]
+
+
 #    for resistance in range(len(resistance_values)):
 #        resistance_csv_data.append([str(resistance_values[resistance]["timestamp"]),
 #                                    str(resistance_values[resistance]["resistance"])])
@@ -321,7 +337,7 @@ def counter(log_obj, search_key, current_count):
 
 def division_handler(numerator, denominator):
     try:
-        return numerator/denominator
+        return numerator / denominator
     except ZeroDivisionError:
         return 0
 
@@ -330,35 +346,35 @@ def parse_log(read_lines):
     machine_start_message = 'INFO Machine status changed to Running'
     errors_parsed = []
     parsed_temp = []
-#    place_wick_house_ok = 0
-#    pick_wick_house_ok = 0
-#    pick_wick_house_e1003 = 0
-#    wick_coil_placed_pass = 0
-#    wick_coil_placed_fail = 0
-#    reject_wick_coil_ok = 0
-#    e_contacts_placed_fail = 0
-#    e_contacts_placed_pass = 0
-#    finished_part_fail = 0
-#    finished_part_pass = 0
-#    resistance_measure_fail = 0
-#    resistance_measure_ok = 0
-#    reject_atomizer_ok = 0
-#    pick_atomizer_from_turret_ok = 0
-#    place_atomier_to_pentagon = 0
-#    punch_e_contact1_e1002 = 0
-#    punch_e_contact2_e1002 = 0
-#    punch_e_contact1_ok = 0
-#    punch_e_contact2_ok = 0
-#    pick_wick_coil1_e1003 = 0
-#    pick_wick_coil2_e1003 = 0
-#    pick_wick_coil1_ok = 0
-#    pick_wick_coil2_ok = 0
-#    e_contact_1_pass = 0
-#    e_contact_1_fail = 0
-#    e_contact_2_pass = 0
-#    e_contact_2_fail = 0
-#    wc1_toss = 0
-#    wc2_toss = 0
+    #    place_wick_house_ok = 0
+    #    pick_wick_house_ok = 0
+    #    pick_wick_house_e1003 = 0
+    #    wick_coil_placed_pass = 0
+    #    wick_coil_placed_fail = 0
+    #    reject_wick_coil_ok = 0
+    #    e_contacts_placed_fail = 0
+    #    e_contacts_placed_pass = 0
+    #    finished_part_fail = 0
+    #    finished_part_pass = 0
+    #    resistance_measure_fail = 0
+    #    resistance_measure_ok = 0
+    #    reject_atomizer_ok = 0
+    #    pick_atomizer_from_turret_ok = 0
+    #    place_atomier_to_pentagon = 0
+    #    punch_e_contact1_e1002 = 0
+    #    punch_e_contact2_e1002 = 0
+    #    punch_e_contact1_ok = 0
+    #    punch_e_contact2_ok = 0
+    #    pick_wick_coil1_e1003 = 0
+    #    pick_wick_coil2_e1003 = 0
+    #    pick_wick_coil1_ok = 0
+    #    pick_wick_coil2_ok = 0
+    #    e_contact_1_pass = 0
+    #    e_contact_1_fail = 0
+    #    e_contact_2_pass = 0
+    #    e_contact_2_fail = 0
+    #    wc1_toss = 0
+    #    wc2_toss = 0
     infeed_pick_ok = 0
     infeed_place_ok = 0
     infeed_reject_ok = 0
@@ -404,35 +420,35 @@ def parse_log(read_lines):
         if (START_TIME and get_date_time_obj(i[:23]) <= get_date_time_obj(START_TIME)) or (
                 END_TIME and get_date_time_obj(i[:23]) >= get_date_time_obj(END_TIME)):
             continue
-#        place_wick_house_ok = counter(i, "PlaceWickHousing=1[Ok]", place_wick_house_ok)
-#        pick_wick_house_ok = counter(i, "PickWickHousing=1[Ok]", pick_wick_house_ok)
-#        pick_wick_house_e1003 = counter(i, "PickWickHousing=1[E", pick_wick_house_e1003)
-#        wick_coil_placed_pass = counter(i, "WickCoilPlaced=PASS", wick_coil_placed_pass)
-#        wick_coil_placed_fail = counter(i, "WickCoilPlaced=FAIL", wick_coil_placed_fail)
-#        reject_wick_coil_ok = counter(i, "RejectWickCoil=1[Ok]", reject_wick_coil_ok)
-#        e_contacts_placed_fail = counter(i, "EContactsPlaced=FAIL", e_contacts_placed_fail)
-#        e_contacts_placed_pass = counter(i, "EContactsPlaced=PASS", e_contacts_placed_pass)
-#        finished_part_fail = counter(i, "FinishedPart=FAIL", finished_part_fail)
-#        finished_part_pass = counter(i, "FinishedPart=PASS", finished_part_pass)
-#        resistance_measure_fail = counter(i, "Resistance measurement failed!", resistance_measure_fail)
-#        resistance_measure_ok = counter(i, "ResistanceMeasure=1[Ok]", resistance_measure_ok)
-#        reject_atomizer_ok = counter(i, "RejectAtomizer=1[Ok]", reject_atomizer_ok)
-#        pick_atomizer_from_turret_ok = counter(i, "PickAtomizerFromTurret=1[Ok]", pick_atomizer_from_turret_ok)
-#        place_atomier_to_pentagon = counter(i, "PlaceAtomierToPentagon=1[Ok]", place_atomier_to_pentagon)
-#        punch_e_contact1_e1002 = counter(i, "PunchEContact1=1[E", punch_e_contact1_e1002)
-#        punch_e_contact2_e1002 = counter(i, "PunchEContact2=1[E", punch_e_contact2_e1002)
-#        punch_e_contact1_ok = counter(i, "PunchEContact1=1[Ok]", punch_e_contact1_ok)
-#        punch_e_contact2_ok = counter(i, "PunchEContact2=1[Ok]", punch_e_contact2_ok)
-#        pick_wick_coil1_e1003 = counter(i, "PickWickCoil1=1[E", pick_wick_coil1_e1003)
-#        pick_wick_coil2_e1003 = counter(i, "PickWickCoil2=1[E", pick_wick_coil2_e1003)
-#        pick_wick_coil1_ok = counter(i, "PickWickCoil1=1[Ok]", pick_wick_coil1_ok)
-#        pick_wick_coil2_ok = counter(i, "PickWickCoil2=1[Ok]", pick_wick_coil2_ok)
-#        e_contact_1_pass = counter(i, "EContact1=PASS", e_contact_1_pass)
-#        e_contact_1_fail = counter(i, "EContact1=FAIL", e_contact_1_fail)
-#        e_contact_2_pass = counter(i, "EContact2=PASS", e_contact_2_pass)
-#        e_contact_2_fail = counter(i, "EContact2=FAIL", e_contact_2_fail)
-#        wc1_toss = counter(i, "PickWickCoil1=1[E1", wc1_toss)
-#        wc2_toss = counter(i, "PickWickCoil2=1[E1", wc2_toss)
+        #        place_wick_house_ok = counter(i, "PlaceWickHousing=1[Ok]", place_wick_house_ok)
+        #        pick_wick_house_ok = counter(i, "PickWickHousing=1[Ok]", pick_wick_house_ok)
+        #        pick_wick_house_e1003 = counter(i, "PickWickHousing=1[E", pick_wick_house_e1003)
+        #        wick_coil_placed_pass = counter(i, "WickCoilPlaced=PASS", wick_coil_placed_pass)
+        #        wick_coil_placed_fail = counter(i, "WickCoilPlaced=FAIL", wick_coil_placed_fail)
+        #        reject_wick_coil_ok = counter(i, "RejectWickCoil=1[Ok]", reject_wick_coil_ok)
+        #        e_contacts_placed_fail = counter(i, "EContactsPlaced=FAIL", e_contacts_placed_fail)
+        #        e_contacts_placed_pass = counter(i, "EContactsPlaced=PASS", e_contacts_placed_pass)
+        #        finished_part_fail = counter(i, "FinishedPart=FAIL", finished_part_fail)
+        #        finished_part_pass = counter(i, "FinishedPart=PASS", finished_part_pass)
+        #        resistance_measure_fail = counter(i, "Resistance measurement failed!", resistance_measure_fail)
+        #        resistance_measure_ok = counter(i, "ResistanceMeasure=1[Ok]", resistance_measure_ok)
+        #        reject_atomizer_ok = counter(i, "RejectAtomizer=1[Ok]", reject_atomizer_ok)
+        #        pick_atomizer_from_turret_ok = counter(i, "PickAtomizerFromTurret=1[Ok]", pick_atomizer_from_turret_ok)
+        #        place_atomier_to_pentagon = counter(i, "PlaceAtomierToPentagon=1[Ok]", place_atomier_to_pentagon)
+        #        punch_e_contact1_e1002 = counter(i, "PunchEContact1=1[E", punch_e_contact1_e1002)
+        #        punch_e_contact2_e1002 = counter(i, "PunchEContact2=1[E", punch_e_contact2_e1002)
+        #        punch_e_contact1_ok = counter(i, "PunchEContact1=1[Ok]", punch_e_contact1_ok)
+        #        punch_e_contact2_ok = counter(i, "PunchEContact2=1[Ok]", punch_e_contact2_ok)
+        #        pick_wick_coil1_e1003 = counter(i, "PickWickCoil1=1[E", pick_wick_coil1_e1003)
+        #        pick_wick_coil2_e1003 = counter(i, "PickWickCoil2=1[E", pick_wick_coil2_e1003)
+        #        pick_wick_coil1_ok = counter(i, "PickWickCoil1=1[Ok]", pick_wick_coil1_ok)
+        #        pick_wick_coil2_ok = counter(i, "PickWickCoil2=1[Ok]", pick_wick_coil2_ok)
+        #        e_contact_1_pass = counter(i, "EContact1=PASS", e_contact_1_pass)
+        #        e_contact_1_fail = counter(i, "EContact1=FAIL", e_contact_1_fail)
+        #        e_contact_2_pass = counter(i, "EContact2=PASS", e_contact_2_pass)
+        #        e_contact_2_fail = counter(i, "EContact2=FAIL", e_contact_2_fail)
+        #        wc1_toss = counter(i, "PickWickCoil1=1[E1", wc1_toss)
+        #        wc2_toss = counter(i, "PickWickCoil2=1[E1", wc2_toss)
         infeed_pick_ok = counter(i, "InfeedPick=1[Ok]", infeed_pick_ok)
         infeed_place_ok = counter(i, "InfeedPlace=1[Ok]", infeed_place_ok)
         infeed_reject_ok = counter(i, "InfeedReject=1[Ok]", wick1_pick_ok)
@@ -466,7 +482,6 @@ def parse_log(read_lines):
         outfeed_pick_ok = counter(i, "OutfeedPick=1[Ok]", outfeed_pick_ok)
         outfeed_place_ok = counter(i, "OutfeedPlace=1[Ok]", outfeed_place_ok)
         outfeed_reject_ok = counter(i, "OutfeedReject=1[Ok]", outfeed_reject_ok)
-
 
         if (" EContact1=" in i) or (" EContact2=" in i):
             continue
@@ -506,119 +521,126 @@ def parse_log(read_lines):
     if not log_start_time:
         raise Exception("Invalid start time/end time")
     log_end_time = get_date_time_obj(log_end_obj[:23])
-    time_diff = log_end_time-log_start_time
-    hours = (time_diff.total_seconds())/60/60
-    time_diff_mins = round((time_diff.total_seconds())/60, 2)
-#    uph = division_handler(pick_atomizer_from_turret_ok, hours)
+    time_diff = log_end_time - log_start_time
+    hours = (time_diff.total_seconds()) / 60 / 60
+    time_diff_mins = round((time_diff.total_seconds()) / 60, 2)
+    #    uph = division_handler(pick_atomizer_from_turret_ok, hours)
 
-#    stn_1 = division_handler((place_wick_house_ok-e_contacts_placed_pass-e_contacts_placed_fail), place_wick_house_ok)
-#    stn_4 = division_handler(e_contacts_placed_fail, (e_contacts_placed_pass+e_contacts_placed_fail))
-#    stn_6 = division_handler(wick_coil_placed_fail, (wick_coil_placed_pass+wick_coil_placed_fail))
-#    stn_9 = division_handler(finished_part_fail, (finished_part_pass+finished_part_fail))
-#    stn_10 = division_handler(resistance_measure_fail, resistance_measure_ok)
-#    stn_12 = division_handler(reject_atomizer_ok, pick_atomizer_from_turret_ok)
-#    stn_2 = division_handler(punch_e_contact1_e1002, (punch_e_contact1_ok+punch_e_contact1_e1002))
-#    stn_3 = division_handler(punch_e_contact2_e1002, (punch_e_contact2_ok+punch_e_contact2_e1002))
-#    stn_5_1 = division_handler(pick_wick_coil1_e1003, (pick_wick_coil1_ok+pick_wick_coil1_e1003))
-#    stn_5_2 = division_handler(pick_wick_coil2_e1003, (pick_wick_coil2_ok+pick_wick_coil2_e1003))
-#    output_yield_value = (1-stn_9)*(1-stn_10)
+    #    stn_1 = division_handler((place_wick_house_ok-e_contacts_placed_pass-e_contacts_placed_fail), place_wick_house_ok)
+    #    stn_4 = division_handler(e_contacts_placed_fail, (e_contacts_placed_pass+e_contacts_placed_fail))
+    #    stn_6 = division_handler(wick_coil_placed_fail, (wick_coil_placed_pass+wick_coil_placed_fail))
+    #    stn_9 = division_handler(finished_part_fail, (finished_part_pass+finished_part_fail))
+    #    stn_10 = division_handler(resistance_measure_fail, resistance_measure_ok)
+    #    stn_12 = division_handler(reject_atomizer_ok, pick_atomizer_from_turret_ok)
+    #    stn_2 = division_handler(punch_e_contact1_e1002, (punch_e_contact1_ok+punch_e_contact1_e1002))
+    #    stn_3 = division_handler(punch_e_contact2_e1002, (punch_e_contact2_ok+punch_e_contact2_e1002))
+    #    stn_5_1 = division_handler(pick_wick_coil1_e1003, (pick_wick_coil1_ok+pick_wick_coil1_e1003))
+    #    stn_5_2 = division_handler(pick_wick_coil2_e1003, (pick_wick_coil2_ok+pick_wick_coil2_e1003))
+    #    output_yield_value = (1-stn_9)*(1-stn_10)
 
-#    new_counts = OrderedDict([("Start", 0), ("End", 0), ("Output", finished_part_pass + finished_part_fail),
-#                              ("Pass", resistance_measure_ok-resistance_measure_fail),
-#                              ("Fail", resistance_measure_fail + finished_part_fail),
-#                              ("DT", 0), ("Run Time", 0), ("Assist", 0),
-#                              ("Stn1 Fail", place_wick_house_ok-e_contacts_placed_pass-e_contacts_placed_fail),
-#                              ("Stn2 Fail", e_contact_1_fail), ("Stn3 Fail", e_contact_2_fail),
-#                              ("Stn4 Fail", e_contacts_placed_fail), ("Stn6 Fail", wick_coil_placed_fail),
-#                              ("Stn9 Fail", finished_part_fail), ("Stn10 Fail", resistance_measure_fail),
-#                              ("Stn1 Pass", place_wick_house_ok), ("Stn2 Pass", e_contact_1_pass),
-#                              ("Stn3 Pass", e_contact_2_pass), ("Stn4 Pass", e_contacts_placed_pass),
-#                              ("Stn6 Pass", wick_coil_placed_pass), ("Stn9 Pass", finished_part_pass),
-#                              ("Stn10 Pass", resistance_measure_ok), ("EC1 Toss", punch_e_contact1_e1002),
-#                              ("EC2 Toss", punch_e_contact2_e1002), ("WC1 Toss", wc1_toss),
-#                              ("WC2 Toss", wc2_toss), ("EC1 Pass", punch_e_contact1_ok),
-#                              ("EC2 Pass", punch_e_contact2_ok), ("WC1 Pass", pick_wick_coil1_ok),
-#                              ("WC2 Pass", pick_wick_coil2_ok)
-#                              ])
+    #    new_counts = OrderedDict([("Start", 0), ("End", 0), ("Output", finished_part_pass + finished_part_fail),
+    #                              ("Pass", resistance_measure_ok-resistance_measure_fail),
+    #                              ("Fail", resistance_measure_fail + finished_part_fail),
+    #                              ("DT", 0), ("Run Time", 0), ("Assist", 0),
+    #                              ("Stn1 Fail", place_wick_house_ok-e_contacts_placed_pass-e_contacts_placed_fail),
+    #                              ("Stn2 Fail", e_contact_1_fail), ("Stn3 Fail", e_contact_2_fail),
+    #                              ("Stn4 Fail", e_contacts_placed_fail), ("Stn6 Fail", wick_coil_placed_fail),
+    #                              ("Stn9 Fail", finished_part_fail), ("Stn10 Fail", resistance_measure_fail),
+    #                              ("Stn1 Pass", place_wick_house_ok), ("Stn2 Pass", e_contact_1_pass),
+    #                              ("Stn3 Pass", e_contact_2_pass), ("Stn4 Pass", e_contacts_placed_pass),
+    #                              ("Stn6 Pass", wick_coil_placed_pass), ("Stn9 Pass", finished_part_pass),
+    #                              ("Stn10 Pass", resistance_measure_ok), ("EC1 Toss", punch_e_contact1_e1002),
+    #                              ("EC2 Toss", punch_e_contact2_e1002), ("WC1 Toss", wc1_toss),
+    #                              ("WC2 Toss", wc2_toss), ("EC1 Pass", punch_e_contact1_ok),
+    #                              ("EC2 Pass", punch_e_contact2_ok), ("WC1 Pass", pick_wick_coil1_ok),
+    #                              ("WC2 Pass", pick_wick_coil2_ok)
+    #                              ])
 
-    new_counts = OrderedDict([("Start", 0), ("End", 0), ("Output", fg_vision1_ok + fg_vision1_fail), #incoming parts for vision inspection
-                              ("Pass", invert_vision_ok), #output at final inspection 2
-                              ("Fail", fg_vision1_fail + fg_vision2_fail+invert_vision_fail+(fg_vision2_ok-invert_vision_fail-invert_vision_ok)), #total failure in fg_vision1 and fg_vision2 and invert_vision and outfeed errors
-                              ("DT", 0), ("Run Time", 0), ("Assist", 0),
-                              ("Stn5 Fail", infeed_pick_ok-infeed_place_ok),
-#                              ("Stn6B_1 Fail", wick1_pick_error),
-#                              ("Stn6B_2 Fail", wick2_pick_error),
-                              ("Stn6D Fail", wick_transfer_vision_fail),
-                              ("Stn6 Fail", wick_insert_error),
-                              ("Stn7_1 Fail", fg_vision1_fail), 
-                              ("Stn7_2 Fail", fg_vision2_fail),
-                              ("Stn8 Fail", fg_vision2_ok-invert_vision_fail-invert_vision_ok),
-                              ("Stn9 Fail", invert_vision_fail),
-                              ("Stn10 Fail", outfeed_pick_ok-outfeed_place_ok), 
-                              ("Stn5 Pass", infeed_place_ok), 
-#                              ("Stn6B_1 Pass", wick1_pick_ok),
-#                              ("Stn6B_2 Pass", wick2_pick_ok),
-                              ("Stn6 Pass", wick_insert_ok),
-                              ("Stn6D Pass", wick_transfer_vision_ok),
-                              ("Stn7_1 Pass", fg_vision1_ok),
-                              ("Stn7_2 Pass", fg_vision2_ok), 
-                              ("Stn8 Pass", invert_vision_ok+invert_vision_fail),
-                              ("Stn9 Pass", invert_vision_ok),
-                              ("Stn10 Pass", outfeed_place_ok),
-                              ("Wick1 Toss", wick1_pick_error),
-                              ("Wick2 Toss", wick2_pick_error), 
-                              ("Total Wick Toss", wick2_pick_error+wick1_pick_error+wick_transfer_vision_fail), 
-                              ("HSA Toss", infeed_pick_ok-infeed_place_ok), 
-                              ("Wick1 Pass", wick1_pick_ok),
-                              ("Wick2 Pass", wick2_pick_ok), 
-                              ("Total Wick Pass", wick_transfer_place_ok), 
-                              ("HSA Pass", infeed_place_ok), 
-                              ])
+    new_counts = OrderedDict(
+        [("Start", 0), ("End", 0), ("Output", fg_vision1_ok + fg_vision1_fail),  # incoming parts for vision inspection
+         ("Pass", invert_vision_ok),  # output at final inspection 2
+         ("Fail", fg_vision1_fail + fg_vision2_fail + invert_vision_fail + (
+                     fg_vision2_ok - invert_vision_fail - invert_vision_ok)),
+         # total failure in fg_vision1 and fg_vision2 and invert_vision and outfeed errors
+         ("DT", 0), ("Run Time", 0), ("Assist", 0),
+         ("Stn5 Fail", infeed_pick_ok - infeed_place_ok),
+         #                              ("Stn6B_1 Fail", wick1_pick_error),
+         #                              ("Stn6B_2 Fail", wick2_pick_error),
+         ("Stn6D Fail", wick_transfer_vision_fail),
+         ("Stn6 Fail", wick_insert_error),
+         ("Stn7_1 Fail", fg_vision1_fail),
+         ("Stn7_2 Fail", fg_vision2_fail),
+         ("Stn8 Fail", fg_vision2_ok - invert_vision_fail - invert_vision_ok),
+         ("Stn9 Fail", invert_vision_fail),
+         ("Stn10 Fail", outfeed_pick_ok - outfeed_place_ok),
+         ("Stn5 Pass", infeed_place_ok),
+         #                              ("Stn6B_1 Pass", wick1_pick_ok),
+         #                              ("Stn6B_2 Pass", wick2_pick_ok),
+         ("Stn6 Pass", wick_insert_ok),
+         ("Stn6D Pass", wick_transfer_vision_ok),
+         ("Stn7_1 Pass", fg_vision1_ok),
+         ("Stn7_2 Pass", fg_vision2_ok),
+         ("Stn8 Pass", invert_vision_ok + invert_vision_fail),
+         ("Stn9 Pass", invert_vision_ok),
+         ("Stn10 Pass", outfeed_place_ok),
+         ("Wick1 Toss", wick1_pick_error),
+         ("Wick2 Toss", wick2_pick_error),
+         ("Total Wick Toss", wick2_pick_error + wick1_pick_error + wick_transfer_vision_fail),
+         ("HSA Toss", infeed_pick_ok - infeed_place_ok),
+         ("Wick1 Pass", wick1_pick_ok),
+         ("Wick2 Pass", wick2_pick_ok),
+         ("Total Wick Pass", wick_transfer_place_ok),
+         ("HSA Pass", infeed_place_ok),
+         ])
 
-# stn_5 = Infeed
-# stn_6b_1 = Wick Pick 1
-# stn_6b_2 = Wick Pick 2
-# stn_6c = Wick Flip
-# stn_6d = Wick Pick Vision
-# stn_6 = Wick Compress/Place
-# stn_7_1 = FG Vision 1
-# stn_7_2 = FG Vision 2
-# stn_8 = Wick Flip
-# stn_9 = Wick Flip Vision
-# stn_10 = Outfeed
+    # stn_5 = Infeed
+    # stn_6b_1 = Wick Pick 1
+    # stn_6b_2 = Wick Pick 2
+    # stn_6c = Wick Flip
+    # stn_6d = Wick Pick Vision
+    # stn_6 = Wick Compress/Place
+    # stn_7_1 = FG Vision 1
+    # stn_7_2 = FG Vision 2
+    # stn_8 = Wick Flip
+    # stn_9 = Wick Flip Vision
+    # stn_10 = Outfeed
 
-#    display_counts = {"PunchEContact1=1[OK]": punch_e_contact1_ok, "PunchEContact1=1[E1002]": punch_e_contact1_e1002,
-#                      "PunchEContact2=1[OK]": punch_e_contact2_ok, "PunchEContact2=1[E1002]": punch_e_contact2_e1002,
-#                      "PickWickCoil1=1[Ok]": pick_wick_coil1_ok, "PickWickCoil1=1[E1003]": pick_wick_coil1_e1003,
-#                      "PickWickCoil2=1[Ok]": pick_wick_coil2_ok, "PickWickCoil2=1[E1003]": pick_wick_coil2_e1003,
-#                      "RejectWickCoil=1[Ok]": reject_wick_coil_ok, "EContactsPlaced=PASS": e_contacts_placed_pass,
-#                      "EContactsPlaced=FAIL": e_contacts_placed_fail, "WickCoilPlaced=PASS": wick_coil_placed_pass,
-#                      "WickCoilPlaced=FAIL": wick_coil_placed_fail, "PlaceWickHousing=1[Ok]": place_wick_house_ok,
-#                      "PickWickHousing=1[OK]": pick_wick_house_ok, "PickWickHousing=1[E1003]": pick_wick_house_e1003,
-#                      "ResistanceMeasure=1[OK]": resistance_measure_ok, "RejectAtomizer=1[OK]": reject_atomizer_ok,
-#                      "PickAtomizerFromTurret=1[Ok]": pick_atomizer_from_turret_ok,
-#                      "PlaceAtomierToPentagon=1[Ok]": place_atomier_to_pentagon,
-#                      "FinishedPart=PASS": finished_part_pass, "FinishedPart=FAIL": finished_part_fail,
-#                      "EContact1=PASS": e_contact_1_pass, "EContact1=FAIL": e_contact_1_fail,
-#                      "EContact2=PASS": e_contact_2_pass, "EContact2=FAIL": e_contact_2_fail,
-#                      "Resistance measurement failed!": resistance_measure_fail}
-#    wh_good = e_contacts_placed_fail + e_contacts_placed_pass
-#    wh_bad = place_wick_house_ok - e_contacts_placed_fail - e_contacts_placed_pass
-#    display_material_loss = dict(wh_good=wh_good, wh_bad=wh_bad, ec1_good=punch_e_contact1_ok,
-#                                 ec1_bad=punch_e_contact1_e1002, ec2_good=punch_e_contact2_ok,
-#                                 ec2_bad=punch_e_contact2_e1002, wc1_good=pick_wick_coil1_ok,
-#                                 wc1_bad=pick_wick_coil1_e1003, wc2_good=pick_wick_coil2_ok,
-#                                 wc2_bad=pick_wick_coil2_e1003)
-#    total = pick_atomizer_from_turret_ok
-#    passed = place_atomier_to_pentagon
-    return parsed_temp,\
-        errors_parsed, resistance_values, time_diff_mins, \
+    #    display_counts = {"PunchEContact1=1[OK]": punch_e_contact1_ok, "PunchEContact1=1[E1002]": punch_e_contact1_e1002,
+    #                      "PunchEContact2=1[OK]": punch_e_contact2_ok, "PunchEContact2=1[E1002]": punch_e_contact2_e1002,
+    #                      "PickWickCoil1=1[Ok]": pick_wick_coil1_ok, "PickWickCoil1=1[E1003]": pick_wick_coil1_e1003,
+    #                      "PickWickCoil2=1[Ok]": pick_wick_coil2_ok, "PickWickCoil2=1[E1003]": pick_wick_coil2_e1003,
+    #                      "RejectWickCoil=1[Ok]": reject_wick_coil_ok, "EContactsPlaced=PASS": e_contacts_placed_pass,
+    #                      "EContactsPlaced=FAIL": e_contacts_placed_fail, "WickCoilPlaced=PASS": wick_coil_placed_pass,
+    #                      "WickCoilPlaced=FAIL": wick_coil_placed_fail, "PlaceWickHousing=1[Ok]": place_wick_house_ok,
+    #                      "PickWickHousing=1[OK]": pick_wick_house_ok, "PickWickHousing=1[E1003]": pick_wick_house_e1003,
+    #                      "ResistanceMeasure=1[OK]": resistance_measure_ok, "RejectAtomizer=1[OK]": reject_atomizer_ok,
+    #                      "PickAtomizerFromTurret=1[Ok]": pick_atomizer_from_turret_ok,
+    #                      "PlaceAtomierToPentagon=1[Ok]": place_atomier_to_pentagon,
+    #                      "FinishedPart=PASS": finished_part_pass, "FinishedPart=FAIL": finished_part_fail,
+    #                      "EContact1=PASS": e_contact_1_pass, "EContact1=FAIL": e_contact_1_fail,
+    #                      "EContact2=PASS": e_contact_2_pass, "EContact2=FAIL": e_contact_2_fail,
+    #                      "Resistance measurement failed!": resistance_measure_fail}
+    #    wh_good = e_contacts_placed_fail + e_contacts_placed_pass
+    #    wh_bad = place_wick_house_ok - e_contacts_placed_fail - e_contacts_placed_pass
+    #    display_material_loss = dict(wh_good=wh_good, wh_bad=wh_bad, ec1_good=punch_e_contact1_ok,
+    #                                 ec1_bad=punch_e_contact1_e1002, ec2_good=punch_e_contact2_ok,
+    #                                 ec2_bad=punch_e_contact2_e1002, wc1_good=pick_wick_coil1_ok,
+    #                                 wc1_bad=pick_wick_coil1_e1003, wc2_good=pick_wick_coil2_ok,
+    #                                 wc2_bad=pick_wick_coil2_e1003)
+    #    total = pick_atomizer_from_turret_ok
+    #    passed = place_atomier_to_pentagon
+    return parsed_temp, \
+           errors_parsed, resistance_values, time_diff_mins, \
            log_start_time, log_end_time, new_counts
 
 
-temp_data, errors_parsed_list, \
-  ohms, total_time_mins, log_start_time, log_end_time, new_all_counts = parse_log(lines)
-write_csv_data(temp_data, log_csv_name, errors_parsed_list,
-               ohms, total_time_mins, log_start_time, log_end_time, new_all_counts)
-               
-               
+# temp_data, errors_parsed_list,ohms, total_time_mins, log_start_time, log_end_time, M1_new_all_counts = parse_log(lines)
+# write_csv_data(temp_data, log_csv_name, errors_parsed_list,
+#                ohms, total_time_mins, log_start_time, log_end_time, M1_new_all_counts)
+
+if __name__ == '__main__':
+    try:
+        main()
+    except TypeError:
+        main(LOG_FILE_PATH)
+        pass

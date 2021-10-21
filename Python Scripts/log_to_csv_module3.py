@@ -12,14 +12,28 @@ q = re.compile(r'\w+\d=FAIL')
 # END_TIME = "2019-04-23 16:22:07.5131"
 START_TIME = ""
 END_TIME = ""
+LOG_FILE_PATH = '/Users/justinclay/Downloads/AKB Log files/AKB M1/2021-10-11_History.log'
 
-if len(sys.argv) > 1:
-    LOG_FILE_PATH = sys.argv[1]
-    if len(sys.argv) > 2:
-        START_TIME = sys.argv[2]
-        END_TIME = sys.argv[3]
-else:
-    raise Exception("Log file path is mandatory to process.")
+def main(path: str):
+    global temp_data, errors_parsed_list, ohms, total_time_mins, log_start_time, log_end_time, new_all_counts
+    global LOG_FILE_PATH
+
+    LOG_FILE_PATH = path
+    if len(LOG_FILE_PATH) < 1:
+        raise Exception("No Log Path Found")
+        pass
+
+    temp_data, errors_parsed_list, ohms, total_time_mins, log_start_time, log_end_time, new_all_counts = parse_log(
+        lines)
+
+    return temp_data, errors_parsed_list, ohms, total_time_mins, log_start_time, log_end_time, new_all_counts
+# if len(sys.argv) > 1:
+#     LOG_FILE_PATH = sys.argv[1]
+#     if len(sys.argv) > 2:
+#         START_TIME = sys.argv[2]
+#         END_TIME = sys.argv[3]
+# else:
+#     raise Exception("Log file path is mandatory to process.")
 
 RUNNING_STATUS = "Running"
 STOPPING_STATUS = "Stopped"
@@ -619,9 +633,15 @@ def parse_log(read_lines):
            log_start_time, log_end_time, new_counts
 
 
-temp_data, errors_parsed_list, \
-  ohms, total_time_mins, log_start_time, log_end_time, new_all_counts = parse_log(lines)
-write_csv_data(temp_data, log_csv_name, errors_parsed_list,
-               ohms, total_time_mins, log_start_time, log_end_time, new_all_counts)
+# temp_data, errors_parsed_list, \
+#   ohms, total_time_mins, log_start_time, log_end_time, new_all_counts = parse_log(lines)
+# write_csv_data(temp_data, log_csv_name, errors_parsed_list,
+#                ohms, total_time_mins, log_start_time, log_end_time, new_all_counts)
                
                
+if __name__ == '__main__':
+    try:
+        main()
+    except TypeError:
+        main(LOG_FILE_PATH)
+        pass
