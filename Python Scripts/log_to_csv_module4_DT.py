@@ -70,6 +70,7 @@ def write_csv_data(temp,
     longest_up_time = datetime.timedelta(seconds=0)
     Up_time = datetime.timedelta(seconds=0)
     total_down_time = datetime.timedelta(seconds=0)
+    global error_log_list, errors
     error_log_list = []
     errors = []
     time_00 = 0
@@ -133,17 +134,16 @@ def write_csv_data(temp,
     new_counts["DT"] = total_down_time
     new_counts["Run Time"] = Up_time
 
-    with open(output_log_csv_name.split(".")[0] + "_new_counts.csv", 'w') as out_file:
-        writer = csv.writer(out_file, dialect='excel')
-        header = list()
-        header_value = list()
-        for k, v in new_counts.items():
-            header.append(k)
-            header_value.append(v)
-        writer.writerow(header)
-        writer.writerow(header_value)
-
-    print("UP Time :" + str(Up_time))
+    # with open(output_log_csv_name.split(".")[0] + "_new_counts.csv", 'w') as out_file:
+    #     writer = csv.writer(out_file, dialect='excel')
+    #     header = list()
+    #     header_value = list()
+    #     for k, v in new_counts.items():
+    #         header.append(k)
+    #         header_value.append(v)
+    #     writer.writerow(header)
+    #     writer.writerow(header_value)
+    # print("UP Time :" + str(Up_time))
 
     error_csv_data = [["Time Stamp", "Error"]]
     for error in range(len(errors_parsed)):
@@ -152,11 +152,20 @@ def write_csv_data(temp,
         writer = csv.writer(error_csv_file)
         writer.writerows(error_csv_data)
 
+    # CSV Downtime data ===================
+
+    global csvData
     csvData = [["Cycle_id", "Start", "End", "Failure Mode", "Time(min)", "MTBA(min)"]]
     for i in range(len(session_up_time)):
         csvData.append(
-            [str(i + 1), str(session_up_time[i]["start_time"]), str(session_up_time[i]["end_time"]),
-             session_up_time[i]["errors"], str(session_up_time[i]["down"]), str(session_up_time[i]["up"])])
+            [
+                str(i + 1),
+                str(session_up_time[i]["start_time"]),
+                str(session_up_time[i]["end_time"]),
+                session_up_time[i]["errors"],
+                str(session_up_time[i]["down"]),
+                str(session_up_time[i]["up"])
+            ])
     csvData.append(["      "])
     csvData.append(["      "])
     csvData.append(["Total_Up_time", str(Up_time)])
@@ -176,7 +185,6 @@ def write_csv_data(temp,
     total_down_time_mins = 0
     total_up_time_mins = round(float(Up_time.total_seconds()) / 60, 2)
     try:
-
         down_time_list = [x["down"] for x in session_up_time if x["down"]]
         total_down_time_mins = round(float(sum(down_time_list, datetime.timedelta(0)).total_seconds()) / 60, 2)
         mtbf = division_handler(sum(down_time_list, datetime.timedelta(0)), len(down_time_list))
@@ -184,15 +192,15 @@ def write_csv_data(temp,
     except:
         pass
     csvData.append(["Longest Up time", longest_up_time])
-    with open(output_log_csv_name, 'w') as csvFile:
-        writer = csv.writer(csvFile)
-        writer.writerows(csvData)
-    count_csv_data = [["Name", "Count"]]
+    # with open(output_log_csv_name, 'w') as csvFile:
+    #     writer = csv.writer(csvFile)
+    #     writer.writerows(csvData)
+    # count_csv_data = [["Name", "Count"]]
 
-    with open(output_log_csv_name.split(".")[0] + "_counts.csv", 'w') as count_csv_file:
-        count_writer = csv.writer(count_csv_file)
-        count_writer.writerows(count_csv_data)
-    resistance_csv_data = [["Timestamp", "Resistance(ohm)"]]
+    # with open(output_log_csv_name.split(".")[0] + "_counts.csv", 'w') as count_csv_file:
+    #     count_writer = csv.writer(count_csv_file)
+    #     count_writer.writerows(count_csv_data)
+    # resistance_csv_data = [["Timestamp", "Resistance(ohm)"]]
 
 
 def counter(log_obj, search_key, current_count):
