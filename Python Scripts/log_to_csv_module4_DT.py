@@ -2,11 +2,13 @@ import datetime
 import re
 import csv
 import sys
+import copy
 
 from collections import OrderedDict
 
 p = re.compile(r'\[\w+\]')
 q = re.compile(r'\w+\d=FAIL')
+n = 0
 
 # START_TIME = "2019-04-23 15:16:46.2775"
 # END_TIME = "2019-04-23 16:22:07.5131"
@@ -63,8 +65,10 @@ def write_csv_data(temp,
                    log_start_time,
                    log_end_time,
                    new_counts):
+    global n
     previous_state = STOPPING_STATUS
     session_flag = False
+    global session_up_time
     session_up_time = []
     Up_time_session = datetime.timedelta(seconds=0)
     longest_up_time = datetime.timedelta(seconds=0)
@@ -88,6 +92,12 @@ def write_csv_data(temp,
             elif previous_state == STOPPING_STATUS and session_flag:
                 down_time = (get_timedelta(i['date_time_obj']) - get_timedelta(k)) - Up_time_session
                 total_down_time += down_time
+
+                # session_up_time.append({"up": "", "down": down_time,
+                #                         "error_log_list": error_log_list, "start_time": k + Up_time_session,
+                #                         "end_time": i['date_time_obj'], "errors": ",".join(errors),
+                #                         "error_logs": error_log_list})
+
                 session_up_time.append({"up": "", "down": down_time,
                                         "error_log_list": error_log_list, "start_time": k + Up_time_session,
                                         "end_time": i['date_time_obj'], "errors": ",".join(errors),
@@ -192,6 +202,37 @@ def write_csv_data(temp,
     except:
         pass
     csvData.append(["Longest Up time", longest_up_time])
+    global csvDatacopy
+    if n == 0:
+        csvDatacopy = copy.deepcopy(csvData)
+        n = 1
+    csvData = copy.deepcopy(csvDatacopy)
+    for row in csvData:
+        try:
+            if row[3] == '':
+                csvData.remove(row)
+        except Exception as e:
+            print(e)
+            break
+    for i in enumerate(csvData):
+        if i[0] == 0:
+            i[1].remove('Cycle_id')
+            i[1].insert(0, 'Day')
+            i[1].insert(1, '')
+            i[1].insert(2, 'Module')
+            i[1].insert(3, '')
+        else:
+            try:
+                i[1].remove(i[1][0])
+                i[1].insert(0, '')
+                i[1].insert(0, 'M1')
+                i[1].insert(0, '')
+                i[1].insert(0, str(i[1][3]).split(" ")[0])
+                i[1][6] = i[1][6].split(',')[0]
+            except Exception as e:
+                print(e)
+                break
+
     # with open(output_log_csv_name, 'w') as csvFile:
     #     writer = csv.writer(csvFile)
     #     writer.writerows(csvData)
@@ -218,6 +259,7 @@ def division_handler(numerator, denominator):
 
 def parse_log(read_lines):
     machine_start_message = 'INFO Machine status changed to Running'
+    global errors_parsed, parsed_temp
     errors_parsed = []
     parsed_temp = []
     infeed_pick1_ok = 0
