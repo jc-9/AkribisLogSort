@@ -5,7 +5,6 @@ import log_to_csv_module2 as m2
 import log_to_csv_module3 as m3
 import log_to_csv_module4 as m4
 import log_to_csv_module4_DT as DT
-import pandas as pd
 from openpyxl import load_workbook
 
 listOfFiles = []
@@ -35,17 +34,6 @@ def scandirectory(path):
     global listOfFiles
     for (dirpath, dirnames, filenames) in os.walk(path):
         listOfFiles += [os.path.join(dirpath, file) for file in filenames]
-
-
-def parsehistory(filepath):
-    droplist = []
-    df_hist = pd.read_csv(filepath)
-    for i in df_hist.index:
-        ls = df_hist.iloc[i]
-        for p in ls:
-            if ls[4] == 'nan':
-                droplist.append(i)
-                return droplist
 
 
 l_values = []

@@ -165,9 +165,9 @@ def write_csv_data(temp,
     error_csv_data = [["Time Stamp", "Error"]]
     for error in range(len(errors_parsed)):
         error_csv_data.append([str(errors_parsed[error]["date_time_obj"]), str(errors_parsed[error]["error"])])
-    with open(output_log_csv_name.split(".")[0] + "_errors.csv", 'w') as error_csv_file:
-        writer = csv.writer(error_csv_file)
-        writer.writerows(error_csv_data)
+    # with open(output_log_csv_name.split(".")[0] + "_errors.csv", 'w') as error_csv_file:
+    #     writer = csv.writer(error_csv_file)
+    #     writer.writerows(error_csv_data)
 
     # CSV Downtime data ===================
 
