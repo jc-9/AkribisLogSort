@@ -15,7 +15,7 @@ n = 0
 START_TIME = ""
 END_TIME = ""
 
-LOG_FILE_PATH = '/Users/justinclay/Downloads/AKB Log files/AKB M1/2021-10-11_History.log'
+# LOG_FILE_PATH = '/Users/justinclay/Downloads/AKB Log files/AKB M1/2021-10-11_History.log'
 
 # if len(sys.argv) > 1:
 #     LOG_FILE_PATH = sys.argv[1]
@@ -28,10 +28,11 @@ LOG_FILE_PATH = '/Users/justinclay/Downloads/AKB Log files/AKB M1/2021-10-11_His
 RUNNING_STATUS = "Running"
 STOPPING_STATUS = "Stopped"
 
-with open(LOG_FILE_PATH) as f:
-    lines = f.readlines()
-log_csv_name = LOG_FILE_PATH.split("/")[-1]
-log_csv_name = log_csv_name.split(".")[-2] + ".csv"
+
+# with open(LOG_FILE_PATH) as f:
+#     lines = f.readlines()
+# log_csv_name = LOG_FILE_PATH.split("/")[-1]
+# log_csv_name = log_csv_name.split(".")[-2] + ".csv"
 
 
 def get_timedelta(log_time_obj):
@@ -42,8 +43,12 @@ def get_timedelta(log_time_obj):
 
 
 def get_date_time_obj(datetime_str):
-    datetime_obj = datetime.datetime.strptime(datetime_str, '%Y-%m-%d %H:%M:%S.%f')
-    return datetime_obj
+    try:
+        datetime_obj = datetime.datetime.strptime(datetime_str, '%Y-%m-%d %H:%M:%S.%f')
+        return datetime_obj
+    except Exception as e:
+        print(e)
+        pass
 
 
 def categorize_time(up_time, time_00, time_02_03, time_above_03):
@@ -64,7 +69,9 @@ def write_csv_data(temp,
                    time_diff_mins,
                    log_start_time,
                    log_end_time,
-                   new_counts):
+                   new_counts,
+                   machinename,
+                   ):
     global n
     previous_state = STOPPING_STATUS
     session_flag = False
@@ -176,37 +183,39 @@ def write_csv_data(temp,
                 str(session_up_time[i]["down"]),
                 str(session_up_time[i]["up"])
             ])
-    csvData.append(["      "])
-    csvData.append(["      "])
-    csvData.append(["Total_Up_time", str(Up_time)])
-    csvData.append(["      "])
-    csvData.append(["      "])
-    if time_00 and time_02_03 and time_above_03:
-        total_up_time_cycles = time_00 + time_02_03 + time_above_03
-        csvData.append(["Percentage of cycles with Run Time below 1 minute",
-                        str(round(float(division_handler(time_00, total_up_time_cycles)) * 100, 2))])
-        csvData.append(["Percentage of cycles with Run Time from 1 to 3 minutes",
-                        str(round(float(division_handler(time_02_03, total_up_time_cycles)) * 100, 2))])
-        csvData.append(["Percentage of cycles with Run Time above 3 minutes",
-                        str(round(float(division_handler(time_above_03, total_up_time_cycles)) * 100, 2))])
-    csvData.append(["      "])
-    csvData.append(["      "])
-    csvData.append(["", "Good", "Bad", "Material loss percentage"])
+    # csvData.append(["      "])
+    # csvData.append(["      "])
+    # csvData.append(["Total_Up_time", str(Up_time)])
+    # csvData.append(["      "])
+    # csvData.append(["      "])
+    # if time_00 and time_02_03 and time_above_03:
+    #     total_up_time_cycles = time_00 + time_02_03 + time_above_03
+    #     csvData.append(["Percentage of cycles with Run Time below 1 minute",
+    #                     str(round(float(division_handler(time_00, total_up_time_cycles)) * 100, 2))])
+    #     csvData.append(["Percentage of cycles with Run Time from 1 to 3 minutes",
+    #                     str(round(float(division_handler(time_02_03, total_up_time_cycles)) * 100, 2))])
+    #     csvData.append(["Percentage of cycles with Run Time above 3 minutes",
+    #                     str(round(float(division_handler(time_above_03, total_up_time_cycles)) * 100, 2))])
+    # csvData.append(["      "])
+    # csvData.append(["      "])
+    # csvData.append(["", "Good", "Bad", "Material loss percentage"])
     total_down_time_mins = 0
     total_up_time_mins = round(float(Up_time.total_seconds()) / 60, 2)
     try:
         down_time_list = [x["down"] for x in session_up_time if x["down"]]
         total_down_time_mins = round(float(sum(down_time_list, datetime.timedelta(0)).total_seconds()) / 60, 2)
         mtbf = division_handler(sum(down_time_list, datetime.timedelta(0)), len(down_time_list))
-        csvData.append(["MTBF", str(mtbf)])
+        # csvData.append(["MTBF", str(mtbf)])
     except:
         pass
-    csvData.append(["Longest Up time", longest_up_time])
-    global csvDatacopy
-    if n == 0:
-        csvDatacopy = copy.deepcopy(csvData)
-        n = 1
-    csvData = copy.deepcopy(csvDatacopy)
+    # csvData.append(["Longest Up time", longest_up_time])
+    # global csvDatacopy
+    # if n == 0:
+    #     csvDatacopy = copy.deepcopy(csvData)
+    #     n = 1
+    # csvData = copy.deepcopy(csvDatacopy)
+
+    #  Return CSV Data
     for row in csvData:
         try:
             if row[3] == '':
@@ -225,13 +234,15 @@ def write_csv_data(temp,
             try:
                 i[1].remove(i[1][0])
                 i[1].insert(0, '')
-                i[1].insert(0, 'M1')
+                i[1].insert(0, f'{machinename}')
                 i[1].insert(0, '')
                 i[1].insert(0, str(i[1][3]).split(" ")[0])
                 i[1][6] = i[1][6].split(',')[0]
             except Exception as e:
-                print(e)
+                print('End of log')
                 break
+
+    return csvData
 
     # with open(output_log_csv_name, 'w') as csvFile:
     #     writer = csv.writer(csvFile)
@@ -375,7 +386,26 @@ def parse_log(read_lines):
            log_start_time, log_end_time, new_counts
 
 
-temp_data, errors_parsed_list, \
-ohms, total_time_mins, log_start_time, log_end_time, new_all_counts = parse_log(lines)
-write_csv_data(temp_data, log_csv_name, errors_parsed_list,
-               ohms, total_time_mins, log_start_time, log_end_time, new_all_counts)
+def main(machinename: str, path: str):
+    global csvdata, lines
+
+    LOG_FILE_PATH = path
+    with open(LOG_FILE_PATH) as f:
+        lines = f.readlines()
+    log_csv_name = LOG_FILE_PATH.split("/")[-1]
+    log_csv_name = log_csv_name.split(".")[-2] + ".csv"
+
+    temp_data, errors_parsed_list, ohms, total_time_mins, log_start_time, log_end_time, new_all_counts = parse_log(
+        lines)
+    try:
+        csvdata = write_csv_data(temp_data, log_csv_name, errors_parsed_list,
+                                 ohms, total_time_mins, log_start_time, log_end_time, new_all_counts, machinename)
+    except Exception as e:
+        print(e)
+        pass
+    del csvData[0]
+    return csvdata
+
+
+# if __name__ == '__main__':
+#     main('M2', '/Users/justinclay/Downloads/AKB Log files/AKB M2/2021-10-12_History.log')
